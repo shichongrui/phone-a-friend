@@ -47,10 +47,10 @@ function sendResponse(id, connection, data) {
   connection.send(response)
 }
 
-export var peerId
+export var peerId = sessionStorage['peerId']
 
 export function startServer(key) {
-  peer = new Peer({
+  peer = new Peer(peerId, {
     key: key,
     config: {
       'iceServers': [
@@ -69,6 +69,7 @@ export function startServer(key) {
     peer.on('open', (id) => {
       console.log('peer js setup with peerId %s', id)
       peerId = id
+      sessionStorage['peerId'] = id
       resolve(id)
     })
   })

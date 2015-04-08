@@ -83,7 +83,7 @@ self.addEventListener('activate', function (event) {
 
     return readyPromise.then(function() {
       return new Promise(function (resolve, reject) {
-        if (manifest[url]) {
+        if (Array.isArray(manifest[url]) && manifest[url].length) {
           var index = Math.floor(Math.random() * manifest[url].length)
           var peerId = manifest[url][index]
           console.log('%s may have the file, no need to ask for new peer', peerId)
@@ -156,7 +156,7 @@ self.addEventListener('activate', function (event) {
   }
 
   function removePeerFromManifest(peerId) {
-    var peerManifest = peerManifests[peerId]
+    var peerManifest = peerManifests[peerId] || []
     var numFiles = peerManifest.length
     for (var i = 0; i < numFiles; i++) {
       var index = manifest[peerManifest[i]].indexOf(peerId)
