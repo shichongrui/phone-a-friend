@@ -5,6 +5,7 @@ var manifests = {}
 export function getFile(data) {
   return Promise.all([
     new Promise((resolve, reject) => {
+      console.log('Worker would like %s from %s', data.url, data.peerId)
       PeerServer.sendRequest(data.peerId, {
         'file': data.url
       }, (err, file) => {
@@ -17,6 +18,7 @@ export function getFile(data) {
     }),
     getManifest(data)
   ]).then((data) => {
+    console.log()
     return {
       file: data[0].file,
       manifest: data[1].manifest
@@ -26,6 +28,7 @@ export function getFile(data) {
 
 export function getManifest(data) {
   return new Promise((resolve, reject) => {
+    console.log('Worker would like the manifest from %s', data.peerId)
     PeerServer.sendRequest(data.peerId, {
       'manifest': ''
     }, (err, manifest) => {
