@@ -20,3 +20,11 @@ export function getManifest(req, res) {
     res(data)
   })
 }
+
+export function removePeerFromManifest(peerId) {
+  console.log('Requesting peer %s to be removed from manifest', peerId)
+  Worker.sendMessage({
+    request: 'remove-manifest',
+    peer: peerId
+  })
+}

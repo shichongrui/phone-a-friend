@@ -12,12 +12,13 @@ var ready = PeerServer.startServer('txhk8bqkc2pam7vi').then(() => {
   })
 })
 
-console.log('setting up peer server handlers')
 // peer handlers
+console.log('setting up peer server handlers')
 PeerServer.on('file', PeerHandlers.getFile)
 PeerServer.on('manifest', PeerHandlers.getManifest)
+PeerServer.on('close', PeerHandlers.removePeerFromManifest)
 
-console.log('setting up worker handlers')
 // worker handlers
+console.log('setting up worker handlers')
 Worker.on('file-from-user', WorkerHandlers.getFile)
 Worker.on('peer-id', WorkerHandlers.getPeerId)

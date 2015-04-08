@@ -6,12 +6,15 @@ var connections = {}
 var callbacks = {}
 var handlers = {}
 
-function setUpListeners (connection) {
+function setUpListeners(connection) {
   return new Promise((resolve, reject) => {
     connection.on('open', () => {
       console.log('Connection established with %s', connection.peer)
       setupReceiver(connection)
       resolve(connection)
+    })
+    connection.on('close', () => {
+      handlers['close'](connection.peer)
     })
     connection.on('error', (err) => {
       console.error('There was an error connecting to %s', connection.peer, err)
@@ -20,7 +23,7 @@ function setUpListeners (connection) {
   })
 }
 
-function setupReceiver (connection) {
+function setupReceiver(connection) {
   connection.on('data', (data) => {
     if (data.type === 'request') {
       console.log('Received request from %s for', connection.peer, data.request)
@@ -34,11 +37,11 @@ function setupReceiver (connection) {
   })
 }
 
-function sendResponse (id, connection, data) {
+function sendResponse(id, connection, data) {
   var response = {
     id,
     type: 'response',
-    response: data
+      response: data
   }
   console.log('Sending response to %s', connection.peer, response)
   connection.send(response)
@@ -46,9 +49,16 @@ function sendResponse (id, connection, data) {
 
 export var peerId
 
-export function startServer (key) {
+export function startServer(key) {
   peer = new Peer({
-    key: key
+    key: key,
+    config: {
+      'iceServers': [
+        {
+          url: 'stun:stun.l.google.com:19302'
+        }
+      ]
+    }
   })
 
   peer.on('connection', (connection) => {
@@ -64,7 +74,7 @@ export function startServer (key) {
   })
 }
 
-export function connectToPeer (peerId) {
+export function connectToPeer(peerId) {
   if (connections[peerId]) {
     console.log('Connection already established for peer %s', peerId)
   } else {
@@ -75,7 +85,7 @@ export function connectToPeer (peerId) {
   return connections[peerId]
 }
 
-export function sendRequest (peerId, request, cb) {
+export function sendRequest(peerId, request, cb) {
   connectToPeer(peerId).then((connection) => {
     var req = {
       id: uuid.v1(),
@@ -88,7 +98,7 @@ export function sendRequest (peerId, request, cb) {
   })
 }
 
-export function on (requestName, func) {
+export function on(requestName, func) {
   console.log('Handler setup for %s', requestName)
   handlers[requestName] = func
 }

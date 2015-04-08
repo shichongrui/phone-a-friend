@@ -39,6 +39,7 @@ self.addEventListener('activate', function (event) {
 
   var files = {}
   var manifest = {}
+  var peerManifests = {}
 
   function sendMessage(message) {
     return readyPromise.then(function () {
@@ -129,6 +130,7 @@ self.addEventListener('activate', function (event) {
     console.log('Sending request for', data)
     return sendMessage(request).then(function (response) {
       console.log('Adding %s\'s manifest', data.peerId, response.data.manifest)
+      peerManifests[data.peerId] = response.data.manifest
       var numFiles = response.data.manifest.length
       for (var i = 0; i < numFiles; i++) {
         manifest[response.data.manifest[i]] = manifest[response.data.manifest[i]] || []
@@ -151,6 +153,18 @@ self.addEventListener('activate', function (event) {
         }
       })
     })
+  }
+
+  function removePeerFromManifest(peerId) {
+    var peerManifest = peerManifests[peerId]
+    var numFiles = peerManifest.length
+    for (var i = 0; i < numFiles; i++) {
+      var index = manifest[peerManifest[i]].indexOf(peerId)
+      if (index > -1) {
+        manifest[peerManifest[i]].splice(index, 1)
+      }
+    }
+    delete peerManifests[peerId]
   }
 
   // convert from arraybuffer to hex
@@ -198,6 +212,9 @@ self.addEventListener('activate', function (event) {
         event.ports[0].postMessage({
           manifest: Object.keys(files)
         })
+        break;
+      case 'remove-manifest':
+        removePeerFromManifest(event.data.peer)
         break;
       default:
         event.ports[0].postMessage({
