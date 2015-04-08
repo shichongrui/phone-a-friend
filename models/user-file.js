@@ -9,7 +9,7 @@ export function getUserForFile(url, currentUserSocketId) {
   return new Promise(mulligan(2, 1, (resolve, reject) => {
     db.srandmember(url).then((socketId) => {
       if (socketId === currentUserSocketId || !socketId || socketId === 'null') {
-        reject(new Error('No other users'))
+        resolve()
       } else {
         resolve(socketId)
       }

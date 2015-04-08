@@ -8,16 +8,16 @@ var log = require('pretty-log')
 
 //controllers
 var userConnected = require('./controllers/user-connected')
-var fileRequested = require('./controllers/file-requested')
+var getFile = require('./controllers/get-file')
+var getHash = require('./controllers/get-hash')
 var userDisconnected = require('./controllers/user-disconnected')
 
 io.on('connection', function (socket) {
   log.debug('Waiting for requests')
 
-//  socket.on('record-user-id', userConnected.bind(null, socket))
   socket.on('disconnect', userDisconnected.bind(null, socket))
 
-  socket.on('file', fileRequested.bind(null, socket))
-
+  socket.on('file', getFile.bind(null, socket))
+  socket.on('hash', getHash.bind(null, socket))
 
 })
