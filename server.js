@@ -14,6 +14,7 @@ var userDisconnected = require('./controllers/user-disconnected')
 
 io.on('connection', function (socket) {
   log.debug('Waiting for requests')
+  console.log(socket.request.connection.remoteAddress)
 
   socket.on('disconnect', userDisconnected.bind(null, socket))
 

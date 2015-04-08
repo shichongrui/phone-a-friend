@@ -10,7 +10,6 @@ export default function getFile (socket, url, cb) {
   FileModel.recordUserHasFile(socket.id, url).then(() => {
     return FileModel.getUserForFile(url, socket.id)
   }).then((socketId) => {
-    console.log(socketId, socket.id)
     return Promise.all([
       new Promise((resolve, reject) => {
         if (socketId) {
