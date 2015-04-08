@@ -1,12 +1,12 @@
 import log from 'pretty-log'
-import mulligan from 'mulligan'
+//import mulligan from 'mulligan'
 
 import db from './db'
 
 export function getUserForFile(url, currentUserSocketId) {
   var user
   log.debug('DB: getUserForFile: ' + url)
-  return new Promise(mulligan(2, 1, (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     db.srandmember(url).then((socketId) => {
       if (socketId === currentUserSocketId || !socketId || socketId === 'null') {
         resolve()
@@ -14,7 +14,7 @@ export function getUserForFile(url, currentUserSocketId) {
         resolve(socketId)
       }
     })
-  }))
+  })
 }
 
 export function recordUserHasFile (socketId, url) {
