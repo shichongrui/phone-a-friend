@@ -64,17 +64,26 @@ export function startServer (key) {
 }
 
 export function connectToPeer (peerId) {
-  var connection = connections[peerId] || peer.connect(peerId)
-  return setUpListeners(connection)
+  if (connections[peerId]) {
+    return new Promise((resolve, reject) => {
+      resolve(peerId)
+    })
+  } else {
+    var connection = peer.connect(peerId)
+    return setUpListeners(connection)
+  }
 }
 
-export function sendRequest (peerId, data, cb) {
-  if (!connections[peerId]) {
-    return new Error('Connection not established with that id')
-  }
-  data.id = uuid.v1()
-  connections[peerId].send(data)
-  callbacks[data.id] = cb
+export function sendRequest (peerId, request, cb) {
+  connectToPeer(peerId).then(() => {
+    var req = {
+      id: uuid.v1(),
+      type: 'request',
+      request
+    }
+    connections[peerId].send(req)
+    callbacks[req.id] = cb
+  })
 }
 
 export function on (requestName, func) {

@@ -4,7 +4,7 @@ var workerPromise = Worker()
 function Worker () {
   return new Promise((resolve, reject) => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/peer-assets.sw.js').then(function (registration) {
+      navigator.serviceWorker.register('/service-cdn.js').then(function (registration) {
         // Registration was successful
         console.log('ServiceWorker registration successful with scope: ', registration.scope)
         if (navigator.serviceWorker.controller) {

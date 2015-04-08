@@ -1,8 +1,11 @@
-importScripts('/deferred.min.js')
+importScripts('http://localhost:8081/deferred.min.js')
 importScripts('http://localhost:8080/socket.io/socket.io.js')
 
 var patterns = [
-  /.jpg$/g
+  /.jpg$/g,
+  /.png$/g,
+  /.gif$/g,
+  /.svg$/g
 ]
 
 self.addEventListener('activate', function (event) {
@@ -27,6 +30,7 @@ self.addEventListener('activate', function (event) {
 
   var deferreds = {}
   var files = {}
+  var manifest = {}
 
   function resolveForUrl(url) {
     (deferreds[url] || []).forEach(function (deferred) {
@@ -62,17 +66,26 @@ self.addEventListener('activate', function (event) {
   function getResponse(event) {
     var url = event.request.url
 
-    var matches = patterns.every(function (pattern) {
+    var matches = patterns.some(function (pattern) {
       return pattern.test(url)
     })
 
     if (!matches) {
       return fetch(event.request)
     }
-    url = '/me.jpg'
+
     return readyPromise.then(function() {
       return new Promise(function (resolve, reject) {
-        socket.emit('file', url , function (data) {
+        if (manifest[url]) {
+          var index = Math.floor(Math.random() * manifest[url].length)
+          var peerId = manifest[url][index]
+          socket.emit('hash', url, function (data) {
+            data.peerId = peerId
+            resolve(getResponseFromUser(data, event))
+          })
+        }
+
+        socket.emit('file', url, function (data) {
           if (!data.peerId) {
             resolve(fetch(event.request).then(function(response) {
               var clonedResponse = response.clone()
@@ -92,18 +105,54 @@ self.addEventListener('activate', function (event) {
   }
 
   function getResponseFromUser(data, event) {
+    var hash = data.hash
+    delete data.hash
     var request = {
       request: 'file-from-user',
       data: data
     }
+
     return sendMessage(request).then(function (response) {
-      var blob = new Blob([response.data.file])
-      files[data.url] = blob
-      return new Response(blob, {
-        'status': 200,
-        'statusText': 'OK'
+      var numFiles = response.data.manifest.length
+      for (var i = 0; i < numFiles; i++) {
+        manifest[response.data.manifest[i]] = manifest[response.data.manifest[i]] || []
+        manifest[response.data.manifest[i]].push(data.peerId)
+      }
+
+      return crypto.subtle.digest('SHA-1', response.data.file).then(function(responseHash) {
+        var stringHash = ab2hex(responseHash)
+        if (hash === stringHash) {
+          var blob = new Blob([response.data.file])
+          files[data.url] = blob
+          return new Response(blob, {
+            'status': 200,
+            'statusText': 'OK'
+          })
+        } else {
+          return fetch(event.request)
+        }
       })
     })
+  }
+
+  // convert from arraybuffer to hex
+  function ab2hex(ab) {
+    var dv = new DataView(ab)
+      , i
+      , len
+      , hex = ''
+      , c
+      ;
+
+    for (i = 0, len = dv.byteLength; i < len; i += 1) {
+      c = dv.getUint8(i).toString(16);
+      if (c.length < 2) {
+        c = '0' + c;
+      }
+      hex += c;
+    }
+
+    return hex;
   }
 
   self.addEventListener('message', function (event) {
@@ -124,6 +173,11 @@ self.addEventListener('activate', function (event) {
     case 'file':
       event.ports[0].postMessage({
         file: files[event.data.file]
+      })
+      break;
+    case 'manifest':
+      event.ports[0].postMessage({
+        manifest: Object.keys(files)
       })
       break;
     default:

@@ -14,6 +14,7 @@ var ready = PeerServer.startServer('txhk8bqkc2pam7vi').then(() => {
 
 // peer handlers
 PeerServer.on('file', PeerHandlers.getFile)
+PeerServer.on('manifest', PeerHandlers.getManifest)
 
 // worker handlers
 Worker.on('file-from-user', WorkerHandlers.getFile)

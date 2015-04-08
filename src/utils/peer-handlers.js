@@ -8,3 +8,11 @@ export function getFile(req, res) {
     res(data)
   })
 }
+
+export function getManifest(req, res) {
+  Worker.sendMessage({
+    request: 'manifest'
+  }).then((data) => {
+    res(data)
+  })
+}

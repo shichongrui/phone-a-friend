@@ -3,7 +3,7 @@ var webpack = require('webpack');
 module.exports = {
   entry: {
     main: [
-      'babel/polyfill',
+//      'babel/polyfill',
       './src/app.js'
     ]
   },
