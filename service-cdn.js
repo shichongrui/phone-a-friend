@@ -2,10 +2,12 @@ importScripts('http://localhost:8081/deferred.min.js')
 importScripts('http://localhost:8080/socket.io/socket.io.js')
 
 var patterns = [
-  /.jpg$/g,
-  /.png$/g,
-  /.gif$/g,
-  /.svg$/g
+  /localhost:3002.*\.jpg$/g,
+  /localhost:3002.*\.png$/g,
+  /localhost:3002.*\.gif$/g,
+  /localhost:3002.*\.svg$/g,
+  /localhost:3002.*\.js/g,
+  /localhost:3002.*\.css/g
 ]
 
 self.addEventListener('activate', function (event) {
@@ -70,7 +72,7 @@ self.addEventListener('activate', function (event) {
       return pattern.test(url)
     })
 
-    if (!matches) {
+    if (!matches || url.match('localhost:8081') !== null) {
       return fetch(event.request)
     }
 
