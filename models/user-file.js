@@ -1,19 +1,18 @@
 import log from 'pretty-log'
-//import mulligan from 'mulligan'
 
 import db from './db'
 
 export function getUserForFile(url, currentUserSocketId) {
   var user
   log.debug('DB: getUserForFile: ' + url)
-  return new Promise((resolve, reject) => {
-    db.srandmember(url).then((socketId) => {
-      if (socketId === currentUserSocketId || !socketId || socketId === 'null') {
-        resolve()
-      } else {
-        resolve(socketId)
+  return db.srandmember(url, 2).then((socketIds) => {
+    var numSockets = socketIds.length
+    for (var i = 0; i < numSockets; i++ ) {
+      if (socketIds[i] !== currentUserSocketId && socketIds[i] && socketIds[i] !== 'null') {
+        return socketIds[i]
       }
-    })
+    }
+    return null
   })
 }
 
