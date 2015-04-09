@@ -9,13 +9,11 @@ export default function getFile (socket, url, cb) {
   log.debug('fileRequested: ' + url)
 
   FileModel.getUserForFile(url, socket.id).then((socketId) => {
-    return new Promise((resolve, reject) => {
-      if (socketId) {
-        resolve(UserModel.getPeerId(socketId))
-      } else {
-        resolve()
-      }
-    })
+    if (socketId) {
+      return UserModel.getPeerId(socketId)
+    } else {
+      return null
+    }
   }).then((peerId) => {
     log.success('fileRequested: ' + peerId + ' ' + url)
     if (peerId) {
