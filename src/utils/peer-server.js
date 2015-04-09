@@ -14,6 +14,7 @@ function setUpListeners(connection) {
       resolve(connection)
     })
     connection.on('close', () => {
+      delete connections[connection.peer]
       handlers['close'](connection.peer)
     })
     connection.on('error', (err) => {
@@ -47,10 +48,10 @@ function sendResponse(id, connection, data) {
   connection.send(response)
 }
 
-export var peerId = sessionStorage['peerId']
+export var peerId
 
 export function startServer(key) {
-  peer = new Peer(peerId, {
+  peer = new Peer({
     key: key,
     config: {
       'iceServers': [
@@ -69,7 +70,6 @@ export function startServer(key) {
     peer.on('open', (id) => {
       console.log('peer js setup with peerId %s', id)
       peerId = id
-      sessionStorage['peerId'] = id
       resolve(id)
     })
   })

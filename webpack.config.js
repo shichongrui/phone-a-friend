@@ -2,14 +2,17 @@ var webpack = require('webpack');
 
 module.exports = {
   entry: {
-    main: [
+    "service-client": [
 //      'babel/polyfill',
       './src/app.js'
+    ],
+    "service-cdn": [
+      './service-worker/service-cdn.js'
     ]
   },
   output: {
     path: __dirname,
-    filename: 'bundle.js'
+    filename: '[name].js'
   },
   devtool: "#source-map",
   cache: false,
