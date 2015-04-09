@@ -51,7 +51,7 @@ function getResponseFromUser(request) {
       socket.emit('hash', request.url, function (data) {
         console.log('Server said hash for %s is %s', request.url, data.hash)
         data.peerId = peerId
-        resolve(getFileFromPeer(data, request))
+        resolve(getFileFromPeer(peerId, request))
       })
     } else {
       console.log('No one we know of has %s', request.url)
@@ -63,39 +63,54 @@ function getResponseFromUser(request) {
           resolve(getResponseThroughFetch(request))
         } else {
           console.log('%s has %s', data.peerId, request.url)
-          resolve(getFileFromPeer(data, request))
+          resolve(getFileFromPeer(data.peerId, request))
         }
       })
     }
   })
 }
 
-function getFileFromPeer(data, request) {
-  var hash = data.hash
-  delete data.hash
+function getFileFromPeer(peerId, request) {
   var req = {
     request: 'file-from-user',
-    data: data
+    data: {
+      peerId: peerId,
+      url: request.url
+    }
   }
 
-  console.log('Sending request for', data)
-  return messenger.sendMessage(req).then(function (response) {
-    cache.updateManifestForUser(data.peerId, response.data.manifest)
+  var hashPromise = getHashForFile(request.url)
 
-    console.log('hashing response for %s', data.url)
+  console.log('Sending request for', req.data)
+  return messenger.sendMessage(req).then(function (response) {
+    cache.updateManifestForUser(peerId, response.data.manifest)
+
+    console.log('hashing response for %s', request.url)
     return crypto.subtle.digest('SHA-1', response.data.file).then(function (responseHash) {
       var stringHash = ab2hex(responseHash)
-      console.log('%s and %s do' + ((hash === stringHash) ? ' ' : 'n\'t') + 'match', hash, stringHash)
-      if (hash === stringHash) {
-        var blob = new Blob([response.data.file])
-        cache.putFileInCache(request.url, response.data.file, stringHash)
-        return new Response(blob, {
-          'status': 200,
-          'statusText': 'OK'
-        })
-      } else {
-        return getResponseThroughFetch(request)
-      }
+      return hashPromise.then((hash) => {
+        console.log('%s and %s do' + ((hash === stringHash) ? ' ' : 'n\'t') + 'match', hash, stringHash)
+        if (hash === stringHash) {
+          var blob = new Blob([response.data.file])
+          cache.putFileInCache(request.url, response.data.file, stringHash)
+          return new Response(blob, {
+            'status': 200,
+            'statusText': 'OK'
+          })
+        } else {
+          return getResponseThroughFetch(request)
+        }
+      })
+    })
+  })
+}
+
+function getHashForFile (url) {
+  return new Promise((resolve, reject) => {
+    console.log('Asking socket server for hash for %s', url)
+    socket.emit('hash', url, function (data) {
+      console.log('Server said hash for %s is %s', url, data.hash)
+      resolve(data.hash)
     })
   })
 }
