@@ -15,6 +15,8 @@
   "license": "MIT",
   "dependencies": {
     "babel": "5.0.2",
+    "geoip-lite": "1.1.6",
+    "geolib": "2.0.14",
     "mulligan": "1.0.3",
     "node-uuid": "1.4.3",
     "pretty-log": "0.1.0",

@@ -6,4 +6,5 @@ import * as FileModel from '../models/user-file'
 export default function userDisconnected (socket) {
   log.debug('userDisconnected: ' + socket.id)
   FileModel.removeUserRecords(socket.id)
+  UserModel.removeLocationOfUser(socket.id)
 }

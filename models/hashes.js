@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import request from 'request'
 
-import db from './db'
+import {db} from './db'
 
 export function getHashForFile(url) {
   return new Promise((resolve, reject) => {

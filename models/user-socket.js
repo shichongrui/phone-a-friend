@@ -1,4 +1,4 @@
-import db from './db'
+import {db, formatHash} from './db'
 import log from 'pretty-log'
 
 export function recordPeerId(socketId, peerId) {
@@ -22,26 +22,34 @@ export function removePeerId(socketId, peerId) {
   return db.srem(key, peerId)
 }
 
-export function createUser (userId, socketId) {
-  log.debug('DB: createUser: ' + userId + ': ' + socketId)
-  db.set(userId, socketId)
-  db.set(socketId, userId)
+export function setUserLocation(socketId, cityState, latitude, longitude) {
+  log.debug('DB: Setting the users location')
+  var key = socketId + 'location'
+  var hash = {
+    cityState,
+    latitude,
+    longitude,
+    socketId
+  }
+  return db.hmset(key, hash)
 }
 
-export function getSocketIdForUser (userId) {
-  log.debug('DB: getSockerIdForUser: ' + userId)
-  return db.get(userId)
+export function getLocationOfUser(socketId) {
+  var key = socketId + 'location'
+  return db.hgetall(key)
 }
 
-export function getUserIdForSocket (socketId) {
-  log.debug('DB: getUserIdForSocket: ' + socketId)
-  return db.get(socketId)
+export function removeLocationOfUser(socketId) {
+  var key = socketId + 'location'
+  return db.del(key)
 }
 
-export function removeUserRecords (userId, socketId) {
-  log.debug('DB: removeUserRecords: ' + userId)
-  return Promise.all([
-    db.del(userId),
-    db.del(socketId)
-  ])
+export function getUsersLocations(socketIds) {
+  var keys = socketIds.map(socketId => socketId + 'location')
+  var numKeys = keys.length
+  db.multi()
+  for (var i = 0; i < numKeys; i++) {
+    db.hgetall(keys[i])
+  }
+  return db.exec().then(formatHash)
 }

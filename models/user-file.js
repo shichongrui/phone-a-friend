@@ -1,18 +1,27 @@
 import log from 'pretty-log'
+import geolib from 'geolib'
 
-import db from './db'
+import {db} from './db'
+import * as UserModel from './user-socket'
 
 export function getUserForFile(url, currentUserSocketId) {
   var user
   log.debug('DB: getUserForFile: ' + url)
-  return db.srandmember(url, 2).then((socketIds) => {
-    var numSockets = socketIds.length
-    for (var i = 0; i < numSockets; i++ ) {
-      if (socketIds[i] !== currentUserSocketId && socketIds[i] && socketIds[i] !== 'null') {
-        return socketIds[i]
-      }
+  return db.srandmember(url, 5).then((socketIds) => {
+    socketIds = socketIds.filter(socketId => socketId && socketId !== currentUserSocketId  && socketId !== 'null')
+
+    console.log('Possible sockets', socketIds)
+    if (socketIds.length) {
+      return Promise.all([
+        UserModel.getUsersLocations(socketIds),
+        UserModel.getLocationOfUser(currentUserSocketId)
+      ]).then(([peersLocations, location]) => {
+        var result = geolib.findNearest(location, peersLocations)
+        return socketIds[result.key]
+      })
     }
-    return null
+
+    return
   })
 }
 

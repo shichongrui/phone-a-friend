@@ -15,6 +15,7 @@ var userDisconnected = require('./controllers/user-disconnected')
 
 io.on('connection', function (socket) {
   log.debug('Waiting for requests')
+  userConnected(socket)
 
   socket.on('disconnect', userDisconnected.bind(null, socket))
 
@@ -22,5 +23,4 @@ io.on('connection', function (socket) {
   socket.on('hash', getHash.bind(null, socket))
   socket.on('record-peer-id', PeerId.recordPeerId.bind(null, socket))
   socket.on('remove-peer-id', PeerId.removePeerId.bind(null, socket))
-
 })
