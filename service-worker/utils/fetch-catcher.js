@@ -48,11 +48,7 @@ function getResponseFromUser(request) {
     var peerId = cache.getUserForFileFromManifest(request.url)
     if (peerId) {
       console.log('Asking socket server for hash for %s', request.url)
-      socket.emit('hash', request.url, function (data) {
-        console.log('Server said hash for %s is %s', request.url, data.hash)
-        data.peerId = peerId
-        resolve(getFileFromPeer(peerId, request))
-      })
+      resolve(getFileFromPeer(peerId, request))
     } else {
       console.log('No one we know of has %s', request.url)
       console.log('Asking socket server for user with %s', request.url)
