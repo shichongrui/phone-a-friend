@@ -1,6 +1,27 @@
 import db from './db'
 import log from 'pretty-log'
 
+export function recordPeerId(socketId, peerId) {
+  var key = socketId + 'peerIds'
+  db.sismember(key, peerId).then((isMember) => {
+    if (!isMember) {
+      return db.sadd(socketId + 'peerIds', peerId)
+    } else {
+      return
+    }
+  })
+}
+
+export function getPeerId(socketId) {
+  var key = socketId + 'peerIds'
+  return db.srandmember(key)
+}
+
+export function removePeerId(socketId, peerId) {
+  var key = socketId + 'peerIds'
+  return db.srem(key, peerId)
+}
+
 export function createUser (userId, socketId) {
   log.debug('DB: createUser: ' + userId + ': ' + socketId)
   db.set(userId, socketId)
