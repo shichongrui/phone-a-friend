@@ -1,3 +1,5 @@
+import * as PeerServer from './peer-server'
+
 var handlers = {}
 var workerPromise = Worker()
 
@@ -37,7 +39,8 @@ window.onbeforeunload = () => {
   console.log('Inform worker we are no longer ready')
   sendMessage({
     request: 'ready',
-    ready: false
+    ready: false,
+    peerId: PeerServer.peerId
   })
 }
 

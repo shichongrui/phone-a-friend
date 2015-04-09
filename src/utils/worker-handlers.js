@@ -40,9 +40,3 @@ export function getManifest(data) {
     })
   })
 }
-
-export function getPeerId() {
-  return new Promise((resolve, reject) => {
-    resolve(PeerServer.peerId)
-  })
-}

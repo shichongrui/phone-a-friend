@@ -4,11 +4,12 @@ import * as PeerHandlers from './utils/peer-handlers'
 import * as WorkerHandlers from './utils/worker-handlers'
 
 console.log('Starting peer server')
-var ready = PeerServer.startServer('txhk8bqkc2pam7vi').then(() => {
+var ready = PeerServer.startServer('txhk8bqkc2pam7vi').then((peerId) => {
   console.log('Client ready')
   return Worker.sendMessage({
     request: 'ready',
-    ready: true
+    ready: true,
+    peerId
   })
 })
 

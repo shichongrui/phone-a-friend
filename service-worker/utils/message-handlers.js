@@ -1,9 +1,12 @@
 import * as messenger from './messenger'
 import * as cache from '../models/cache'
+import {socket} from './socket-io'
 
 export function readyStateChange (req, res) {
   messenger.clientReadyStateChange(req.ready)
+  socket.emit('record-peer-id', req.peerId)
   if (!req.ready) {
+    socket.emit('remove-peer-id', req.peerId)
     cache.clearManifests()
   }
   res({})
