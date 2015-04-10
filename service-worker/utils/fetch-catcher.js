@@ -1,18 +1,16 @@
 import * as messenger from './messenger'
 import * as cache from '../models/cache'
+import minimatcher from './minimatcher'
 import {socket} from './socket-io'
 
-//var patterns = [
-//  /localhost:3002.*\.jpg$/g,
-//  /localhost:3002.*\.png$/g,
-//  /localhost:3002.*\.gif$/g,
-//  /localhost:3002.*\.svg$/g,
-//  /localhost:3002.*\.js/g,
-//  /localhost:3002.*\.css/g
-//]
 var patterns = [
-  /\.jpg$/g
+  'http://localhost:3002/**/*.jpg',
+  'http://localhost:3002/**/*.png',
+  'http://localhost:3002/**/*.gif',
+  'http://localhost:3002/**/*.js',
+  'http://localhost:3002/**/*.css'
 ]
+
 
 self.addEventListener('fetch', function (event) {
   event.respondWith(getResponse(event.request))
@@ -21,9 +19,7 @@ self.addEventListener('fetch', function (event) {
 function getResponse(request) {
   console.log('Browser requested %s', request.url)
 
-  var matches = patterns.some(function (pattern) {
-    return pattern.test(request.url)
-  })
+  var matches = minimatcher(request.url, patterns)
 
   if (!matches /*|| url.match('localhost:8081') !== null*/ ) {
     console.log('%s doesnt match any patterns', request.url)
@@ -71,7 +67,8 @@ function getFileFromPeer(peerId, request) {
     request: 'file-from-user',
     data: {
       peerId: peerId,
-      url: request.url
+      url: request.url,
+      includeManifest: cache.havePeerManifest(peerId)
     }
   }
 
@@ -80,7 +77,9 @@ function getFileFromPeer(peerId, request) {
   var filePromise = messenger.sendMessage(req)
 
   return Promise.all([hashPromise, filePromise]).then(([hash, response]) => {
-    cache.updateManifestForUser(peerId, response.data.manifest)
+    if (req.data.includeManifest) {
+      cache.updateManifestForUser(peerId, response.data.manifest)
+    }
 
     return cache.isHash(hash, response.data.file).then((isValid) => {
       if (isValid) {

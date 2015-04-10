@@ -82,6 +82,10 @@ export function removeFileFromCache(url) {
   delete files[url]
 }
 
+export function havePeerManifest(peerId) {
+  return !!peerManifests[peerId]
+}
+
 export function getUsersManifest() {
   return Object.keys(files)
 }

@@ -3,7 +3,7 @@ import * as PeerServer from './peer-server'
 var manifests = {}
 
 export function getFile(data) {
-  return Promise.all([
+  var promises = [
     new Promise((resolve, reject) => {
       console.log('Worker would like %s from %s', data.url, data.peerId)
       PeerServer.sendRequest(data.peerId, {
@@ -15,13 +15,19 @@ export function getFile(data) {
 
         resolve(file)
       })
-    }),
-    getManifest(data)
-  ]).then((data) => {
-    return {
-      file: data[0].file,
-      manifest: data[1].manifest
+    })
+  ]
+  if (data.includeManifest) {
+    promises.push(getManifest(data))
+  }
+  return Promise.all(promises).then((data) => {
+    var response = {
+      file: data[0].file
     }
+    if (data.includeManifest) {
+      response.manifest = data[1].manifest
+    }
+    return response
   })
 }
 

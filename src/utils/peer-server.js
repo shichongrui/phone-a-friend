@@ -52,7 +52,9 @@ export var peerId
 
 export function startServer(key) {
   peer = new Peer({
-    key: key,
+//    key: key,
+    host: 'localhost',
+    port: '9000',
     config: {
       'iceServers': [
         {
