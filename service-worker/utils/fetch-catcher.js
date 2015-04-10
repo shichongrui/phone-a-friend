@@ -75,55 +75,36 @@ function getFileFromPeer(peerId, request) {
     }
   }
 
-  var hashPromise = getHashForFile(request.url)
-
+  var hashPromise = cache.getHashForFile(request.url)
   console.log('Sending request for', req.data)
-  return messenger.sendMessage(req).then(function (response) {
+  var filePromise = messenger.sendMessage(req)
+
+  return Promise.all([hashPromise, filePromise]).then(([hash, response]) => {
     cache.updateManifestForUser(peerId, response.data.manifest)
 
-    console.log('hashing response for %s', request.url)
-    return crypto.subtle.digest('SHA-1', response.data.file).then(function (responseHash) {
-      var stringHash = ab2hex(responseHash)
-      return hashPromise.then((hash) => {
-        console.log('%s and %s do' + ((hash === stringHash) ? ' ' : 'n\'t') + 'match', hash, stringHash)
-        if (hash === stringHash) {
-          var blob = new Blob([response.data.file])
-          cache.putFileInCache(request.url, response.data.file, stringHash)
-          return new Response(blob, {
-            'status': 200,
-            'statusText': 'OK'
-          })
-        } else {
-          return getResponseThroughFetch(request)
+    return cache.isHash(hash, response.data.file).then((isValid) => {
+      if (isValid) {
+        var blob = new Blob([response.data.file])
+        cache.putFileInCache(request.url, response.data.file, stringHash)
+        return new Response(blob, {
+          'status': 200,
+          'statusText': 'OK'
+        })
+      } else {
+        // tell the peer to clear that file from their manifest and ask for a new manifest
+        var req = {
+          request: 'remove-from-manifest',
+          data: {
+            url: request.url,
+            peerId: peerId
+          }
         }
-      })
+        messenger.sendMessage(req)
+        cache.removeManifestForUser(peerId)
+        return getResponseThroughFetch(request)
+      }
     })
+  }).catch((error) => {
+    return getResponseThroughFetch(request)
   })
-}
-
-function getHashForFile (url) {
-  return new Promise((resolve, reject) => {
-    console.log('Asking socket server for hash for %s', url)
-    socket.emit('hash', url, function (data) {
-      console.log('Server said hash for %s is %s', url, data.hash)
-      resolve(data.hash)
-    })
-  })
-}
-
-// convert from arraybuffer to hex
-function ab2hex(ab) {
-  var dv = new DataView(ab),
-    i, len, hex = '',
-    c;
-
-  for (i = 0, len = dv.byteLength; i < len; i += 1) {
-    c = dv.getUint8(i).toString(16);
-    if (c.length < 2) {
-      c = '0' + c;
-    }
-    hex += c;
-  }
-
-  return hex;
 }

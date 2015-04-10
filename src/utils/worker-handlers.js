@@ -18,7 +18,6 @@ export function getFile(data) {
     }),
     getManifest(data)
   ]).then((data) => {
-    console.log()
     return {
       file: data[0].file,
       manifest: data[1].manifest
@@ -37,6 +36,15 @@ export function getManifest(data) {
       }
 
       resolve(manifest)
+    })
+  })
+}
+
+export function removeFileFromManifest(data) {
+  return new Promise((resolve, reject) => {
+    console.log('Informing %s that they should remove %s from their manifest', data.peerId, data.url)
+    PeerServer.sendRequest(data.peerId, {
+      badFile: data.url
     })
   })
 }

@@ -28,3 +28,11 @@ export function removePeerFromManifest(peerId) {
     peer: peerId
   })
 }
+
+export function removeFromManifest(req, res) {
+  console.log('I have been told to remove %s from my manifest', req.badFile)
+  Worker.sendMessage({
+    request: 'remove-from-manifest',
+    url: req.badFile
+  })
+}
