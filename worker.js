@@ -44,7 +44,7 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(31);
+	module.exports = __webpack_require__(37);
 
 
 /***/ },
@@ -1067,7 +1067,7 @@
 	
 	var messenger = _interopRequireWildcard(_import);
 	
-	var socket = io.connect('//localhost:8080', {
+	var socket = io.connect('//localhost:8081', {
 	  transports: ['websocket']
 	});
 	exports.socket = socket;
@@ -1897,7 +1897,8 @@
 
 
 /***/ },
-/* 16 */
+/* 16 */,
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2053,7 +2054,6 @@
 	function hashFile(file) {}
 
 /***/ },
-/* 17 */,
 /* 18 */,
 /* 19 */,
 /* 20 */,
@@ -3451,37 +3451,10 @@
 
 
 /***/ },
-/* 31 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
-	
-	var _import = __webpack_require__(6);
-	
-	var io = _interopRequireWildcard(_import);
-	
-	var _import2 = __webpack_require__(5);
-	
-	var messenger = _interopRequireWildcard(_import2);
-	
-	var _import3 = __webpack_require__(33);
-	
-	var messageHandlers = _interopRequireWildcard(_import3);
-	
-	var _import4 = __webpack_require__(32);
-	
-	var fetchCatcher = _interopRequireWildcard(_import4);
-	
-	messenger.on('file', messageHandlers.getFile);
-	messenger.on('ready', messageHandlers.readyStateChange);
-	messenger.on('manifest', messageHandlers.getUsersManifest);
-	messenger.on('remove-manifest', messageHandlers.removeManifestForPeer);
-	messenger.on('remove-from-manifest', messageHandlers.removeFromManifest);
-
-/***/ },
-/* 32 */
+/* 31 */,
+/* 32 */,
+/* 33 */,
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3496,11 +3469,11 @@
 	
 	var messenger = _interopRequireWildcard(_import);
 	
-	var _import2 = __webpack_require__(16);
+	var _import2 = __webpack_require__(17);
 	
 	var cache = _interopRequireWildcard(_import2);
 	
-	var _minimatcher = __webpack_require__(34);
+	var _minimatcher = __webpack_require__(36);
 	
 	var minimatcher = _interopRequire(_minimatcher);
 	
@@ -3613,7 +3586,7 @@
 	}
 
 /***/ },
-/* 33 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3633,7 +3606,7 @@
 	
 	var messenger = _interopRequireWildcard(_import);
 	
-	var _import2 = __webpack_require__(16);
+	var _import2 = __webpack_require__(17);
 	
 	var cache = _interopRequireWildcard(_import2);
 	
@@ -3684,7 +3657,7 @@
 	}
 
 /***/ },
-/* 34 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3704,9 +3677,36 @@
 	}
 
 /***/ },
-/* 35 */,
-/* 36 */,
-/* 37 */,
+/* 37 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	
+	var _import = __webpack_require__(6);
+	
+	var io = _interopRequireWildcard(_import);
+	
+	var _import2 = __webpack_require__(5);
+	
+	var messenger = _interopRequireWildcard(_import2);
+	
+	var _import3 = __webpack_require__(35);
+	
+	var messageHandlers = _interopRequireWildcard(_import3);
+	
+	var _import4 = __webpack_require__(34);
+	
+	var fetchCatcher = _interopRequireWildcard(_import4);
+	
+	messenger.on('file', messageHandlers.getFile);
+	messenger.on('ready', messageHandlers.readyStateChange);
+	messenger.on('manifest', messageHandlers.getUsersManifest);
+	messenger.on('remove-manifest', messageHandlers.removeManifestForPeer);
+	messenger.on('remove-from-manifest', messageHandlers.removeFromManifest);
+
+/***/ },
 /* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -9501,4 +9501,4 @@
 
 /***/ }
 /******/ ]);
-//# sourceMappingURL=service-cdn.js.map
+//# sourceMappingURL=worker.js.map

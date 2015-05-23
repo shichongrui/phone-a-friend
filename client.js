@@ -44,18 +44,20 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(9);
+	module.exports = __webpack_require__(31);
 
 
 /***/ },
-/* 1 */
+/* 1 */,
+/* 2 */,
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var defaultConfig = {'iceServers': [{ 'url': 'stun:stun.l.google.com:19302' }]};
 	var dataCount = 1;
 	
-	var BinaryPack = __webpack_require__(7);
-	var RTCPeerConnection = __webpack_require__(2).RTCPeerConnection;
+	var BinaryPack = __webpack_require__(19);
+	var RTCPeerConnection = __webpack_require__(7).RTCPeerConnection;
 	
 	var util = {
 	  noop: function() {},
@@ -368,7 +370,10 @@
 
 
 /***/ },
-/* 2 */
+/* 4 */,
+/* 5 */,
+/* 6 */,
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports.RTCSessionDescription = window.RTCSessionDescription ||
@@ -380,7 +385,7 @@
 
 
 /***/ },
-/* 3 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -615,7 +620,9 @@
 
 
 /***/ },
-/* 4 */
+/* 9 */,
+/* 10 */,
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -630,11 +637,11 @@
 	exports.sendRequest = sendRequest;
 	exports.on = on;
 	
-	var _Peer = __webpack_require__(15);
+	var _Peer = __webpack_require__(45);
 	
 	var Peer = _interopRequire(_Peer);
 	
-	var _uuid = __webpack_require__(12);
+	var _uuid = __webpack_require__(42);
 	
 	var uuid = _interopRequire(_uuid);
 	
@@ -645,27 +652,30 @@
 	
 	function setUpListeners(connection) {
 	  return new Promise(function (resolve, reject) {
-	    if (!connections[connection.peer]) {
-	      connection.on('open', function () {
-	        setupReceiver(connection);
-	        connections[connection.peer] = connection;
-	        resolve(connection.peer);
-	      });
-	      connection.on('error', function (err) {
-	        reject(err);
-	      });
-	    } else {
-	      resolve(connection.peer);
-	    }
+	    connection.on('open', function () {
+	      console.log('Connection established with %s', connection.peer);
+	      setupReceiver(connection);
+	      resolve(connection);
+	    });
+	    connection.on('close', function () {
+	      delete connections[connection.peer];
+	      handlers.close(connection.peer);
+	    });
+	    connection.on('error', function (err) {
+	      console.error('There was an error connecting to %s', connection.peer, err);
+	      reject(err);
+	    });
 	  });
 	}
 	
 	function setupReceiver(connection) {
 	  connection.on('data', function (data) {
 	    if (data.type === 'request') {
+	      console.log('Received request from %s for', connection.peer, data.request);
 	      var request = Object.keys(data.request)[0];
 	      handlers[request](data.request, sendResponse.bind(null, data.id, connection));
 	    } else if (data.type === 'response') {
+	      console.log('Recieved response from %s', connection.peer, data.response);
 	      callbacks[data.id](data.response.errors, data.response);
 	      delete callbacks[data.id];
 	    }
@@ -678,6 +688,7 @@
 	    type: 'response',
 	    response: data
 	  };
+	  console.log('Sending response to %s', connection.peer, response);
 	  connection.send(response);
 	}
 	
@@ -687,7 +698,14 @@
 	
 	function startServer(key) {
 	  peer = new Peer({
-	    key: key
+	    //    key: key,
+	    host: 'localhost',
+	    port: '9000',
+	    config: {
+	      iceServers: [{
+	        url: 'stun:stun.l.google.com:19302'
+	      }]
+	    }
 	  });
 	
 	  peer.on('connection', function (connection) {
@@ -696,6 +714,7 @@
 	
 	  return new Promise(function (resolve, reject) {
 	    peer.on('open', function (id) {
+	      console.log('peer js setup with peerId %s', id);
 	      exports.peerId = peerId = id;
 	      resolve(id);
 	    });
@@ -703,43 +722,69 @@
 	}
 	
 	function connectToPeer(peerId) {
-	  var connection = connections[peerId] || peer.connect(peerId);
-	  return setUpListeners(connection);
+	  if (connections[peerId]) {
+	    console.log('Connection already established for peer %s', peerId);
+	  } else {
+	    console.log('Creating connection to %s', peerId);
+	    var connection = peer.connect(peerId);
+	    connections[connection.peer] = setUpListeners(connection);
+	  }
+	  return connections[peerId];
 	}
 	
-	function sendRequest(peerId, data, cb) {
-	  if (!connections[peerId]) {
-	    return new Error('Connection not established with that id');
-	  }
-	  data.id = uuid.v1();
-	  connections[peerId].send(data);
-	  callbacks[data.id] = cb;
+	function sendRequest(peerId, request, cb) {
+	  connectToPeer(peerId).then(function (connection) {
+	    var req = {
+	      id: uuid.v1(),
+	      type: 'request',
+	      request: request
+	    };
+	    console.log('making request to %s for', peerId, req);
+	    connection.send(req);
+	    callbacks[req.id] = cb;
+	  });
 	}
 	
 	function on(requestName, func) {
+	  console.log('Handler setup for %s', requestName);
 	  handlers[requestName] = func;
 	}
 
 /***/ },
-/* 5 */
+/* 12 */,
+/* 13 */,
+/* 14 */,
+/* 15 */,
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+	
+	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	Object.defineProperty(exports, '__esModule', {
 	  value: true
 	});
 	exports.sendMessage = sendMessage;
 	exports.on = on;
+	
+	var _import = __webpack_require__(11);
+	
+	var PeerServer = _interopRequireWildcard(_import);
+	
 	var handlers = {};
 	var workerPromise = Worker();
 	
 	function Worker() {
 	  return new Promise(function (resolve, reject) {
+	    var serviceWorkersAvailable = ('serviceWorker' in navigator);
+	    console.log('Service Workers are' + (serviceWorkersAvailable ? ' ' : 'n\'t') + 'available');
 	    if ('serviceWorker' in navigator) {
-	      navigator.serviceWorker.register('/service-cdn.js').then(function (registration) {
+	      console.log('Registering service worker');
+	      navigator.serviceWorker.register('/worker.js').then(function (registration) {
 	        // Registration was successful
 	        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+	
 	        if (navigator.serviceWorker.controller) {
 	          resolve(navigator.serviceWorker.controller);
 	        } else {
@@ -755,6 +800,7 @@
 	
 	window.onmessage = function (event) {
 	  if (event.ports.length > 0) {
+	    console.log('Recieved message from service worker', event.data);
 	    handlers[event.data.request](event.data.data).then(function (data) {
 	      event.ports[0].postMessage({ data: data });
 	    });
@@ -762,9 +808,11 @@
 	};
 	
 	window.onbeforeunload = function () {
+	  console.log('Inform worker we are no longer ready');
 	  sendMessage({
 	    request: 'ready',
-	    ready: false
+	    ready: false,
+	    peerId: PeerServer.peerId
 	  });
 	};
 	
@@ -773,6 +821,7 @@
 	    return new Promise(function (resolve, reject) {
 	      var messageChannel = new MessageChannel();
 	      messageChannel.port1.onmessage = function (event) {
+	        console.log('Recieved a response from the service worker', event.data);
 	        if (event.data.error) {
 	          reject(event.data.error);
 	        } else {
@@ -783,23 +832,26 @@
 	      // The service worker can then use the transferred port to reply via postMessage(), which
 	      // will in turn trigger the onmessage handler on messageChannel.port1.
 	      // See https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage
+	      console.log('Sending a message to the service worker', data);
 	      navigator.serviceWorker.controller.postMessage(data, [messageChannel.port2]);
 	    });
 	  });
 	}
 	
 	function on(name, func) {
+	  console.log('%s handler registered', name);
 	  handlers[name] = func;
 	}
 
 /***/ },
-/* 6 */
+/* 17 */,
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util = __webpack_require__(1);
-	var RTCPeerConnection = __webpack_require__(2).RTCPeerConnection;
-	var RTCSessionDescription = __webpack_require__(2).RTCSessionDescription;
-	var RTCIceCandidate = __webpack_require__(2).RTCIceCandidate;
+	var util = __webpack_require__(3);
+	var RTCPeerConnection = __webpack_require__(7).RTCPeerConnection;
+	var RTCSessionDescription = __webpack_require__(7).RTCSessionDescription;
+	var RTCIceCandidate = __webpack_require__(7).RTCIceCandidate;
 	
 	/**
 	 * Manages all negotiations between Peers.
@@ -1108,11 +1160,11 @@
 
 
 /***/ },
-/* 7 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var BufferBuilder = __webpack_require__(8).BufferBuilder;
-	var binaryFeatures = __webpack_require__(8).binaryFeatures;
+	var BufferBuilder = __webpack_require__(20).BufferBuilder;
+	var binaryFeatures = __webpack_require__(20).binaryFeatures;
 	
 	var BinaryPack = {
 	  unpack: function(data){
@@ -1633,7 +1685,7 @@
 
 
 /***/ },
-/* 8 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var binaryFeatures = {};
@@ -1703,47 +1755,64 @@
 
 
 /***/ },
-/* 9 */
+/* 21 */,
+/* 22 */,
+/* 23 */,
+/* 24 */,
+/* 25 */,
+/* 26 */,
+/* 27 */,
+/* 28 */,
+/* 29 */,
+/* 30 */,
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
-	var _import = __webpack_require__(5);
+	var _import = __webpack_require__(16);
 	
 	var Worker = _interopRequireWildcard(_import);
 	
-	var _import2 = __webpack_require__(4);
+	var _import2 = __webpack_require__(11);
 	
 	var PeerServer = _interopRequireWildcard(_import2);
 	
-	var _import3 = __webpack_require__(10);
+	var _import3 = __webpack_require__(32);
 	
 	var PeerHandlers = _interopRequireWildcard(_import3);
 	
-	var _import4 = __webpack_require__(11);
+	var _import4 = __webpack_require__(33);
 	
 	var WorkerHandlers = _interopRequireWildcard(_import4);
 	
-	var peer = null;
-	
-	var ready = PeerServer.startServer('txhk8bqkc2pam7vi').then(function () {
+	console.log('Starting peer server');
+	var ready = PeerServer.startServer('txhk8bqkc2pam7vi').then(function (peerId) {
+	  console.log('Client ready');
 	  return Worker.sendMessage({
 	    request: 'ready',
-	    ready: true
+	    ready: true,
+	    peerId: peerId
 	  });
 	});
 	
 	// peer handlers
+	console.log('setting up peer server handlers');
 	PeerServer.on('file', PeerHandlers.getFile);
+	PeerServer.on('manifest', PeerHandlers.getManifest);
+	PeerServer.on('badFile', PeerHandlers.removeFromManifest);
+	PeerServer.on('close', PeerHandlers.removePeerFromManifest);
 	
 	// worker handlers
+	console.log('setting up worker handlers');
 	Worker.on('file-from-user', WorkerHandlers.getFile);
 	Worker.on('peer-id', WorkerHandlers.getPeerId);
+	Worker.on('remove-from-manifest', WorkerHandlers.removeFileFromManifest);
 
 /***/ },
-/* 10 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1754,22 +1823,53 @@
 	  value: true
 	});
 	exports.getFile = getFile;
+	exports.getManifest = getManifest;
+	exports.removePeerFromManifest = removePeerFromManifest;
+	exports.removeFromManifest = removeFromManifest;
 	
-	var _import = __webpack_require__(5);
+	var _import = __webpack_require__(16);
 	
 	var Worker = _interopRequireWildcard(_import);
 	
 	function getFile(req, res) {
+	  console.log('Requesting %s from worker', req.file);
 	  Worker.sendMessage({
 	    request: 'file',
 	    file: req.file
 	  }).then(function (data) {
+	    console.log('Got %s from worker', req.file);
 	    res(data);
+	  });
+	}
+	
+	function getManifest(req, res) {
+	  console.log('Requesting manifest from worker');
+	  Worker.sendMessage({
+	    request: 'manifest'
+	  }).then(function (data) {
+	    console.log('Manifest retrieved', data);
+	    res(data);
+	  });
+	}
+	
+	function removePeerFromManifest(peerId) {
+	  console.log('Requesting peer %s to be removed from manifest', peerId);
+	  Worker.sendMessage({
+	    request: 'remove-manifest',
+	    peer: peerId
+	  });
+	}
+	
+	function removeFromManifest(req, res) {
+	  console.log('I have been told to remove %s from my manifest', req.badFile);
+	  Worker.sendMessage({
+	    request: 'remove-from-manifest',
+	    url: req.badFile
 	  });
 	}
 
 /***/ },
-/* 11 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1780,39 +1880,76 @@
 	  value: true
 	});
 	exports.getFile = getFile;
-	exports.getPeerId = getPeerId;
+	exports.getManifest = getManifest;
+	exports.removeFileFromManifest = removeFileFromManifest;
 	
-	var _import = __webpack_require__(4);
+	var _import = __webpack_require__(11);
 	
 	var PeerServer = _interopRequireWildcard(_import);
 	
-	function getFile(data) {
-	  return new Promise(function (resolve, reject) {
-	    PeerServer.connectToPeer(data.peerId).then(function () {
-	      PeerServer.sendRequest(data.peerId, {
-	        type: 'request',
-	        request: {
-	          file: data.url
-	        }
-	      }, function (err, file) {
-	        if (err) {
-	          return reject(err);
-	        }
+	var manifests = {};
 	
-	        resolve(file);
-	      });
+	function getFile(data) {
+	  var promises = [new Promise(function (resolve, reject) {
+	    console.log('Worker would like %s from %s', data.url, data.peerId);
+	    PeerServer.sendRequest(data.peerId, {
+	      file: data.url
+	    }, function (err, file) {
+	      if (err) {
+	        return reject(err);
+	      }
+	
+	      resolve(file);
+	    });
+	  })];
+	  if (data.includeManifest) {
+	    promises.push(getManifest(data));
+	  }
+	  return Promise.all(promises).then(function (data) {
+	    var response = {
+	      file: data[0].file
+	    };
+	    if (data.includeManifest) {
+	      response.manifest = data[1].manifest;
+	    }
+	    return response;
+	  });
+	}
+	
+	function getManifest(data) {
+	  return new Promise(function (resolve, reject) {
+	    console.log('Worker would like the manifest from %s', data.peerId);
+	    PeerServer.sendRequest(data.peerId, {
+	      manifest: ''
+	    }, function (err, manifest) {
+	      if (err) {
+	        return reject(err);
+	      }
+	
+	      resolve(manifest);
 	    });
 	  });
 	}
 	
-	function getPeerId() {
+	function removeFileFromManifest(data) {
 	  return new Promise(function (resolve, reject) {
-	    resolve(PeerServer.peerId);
+	    console.log('Informing %s that they should remove %s from their manifest', data.peerId, data.url);
+	    PeerServer.sendRequest(data.peerId, {
+	      badFile: data.url
+	    });
 	  });
 	}
 
 /***/ },
-/* 12 */
+/* 34 */,
+/* 35 */,
+/* 36 */,
+/* 37 */,
+/* 38 */,
+/* 39 */,
+/* 40 */,
+/* 41 */,
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;//     uuid.js
@@ -2065,13 +2202,13 @@
 
 
 /***/ },
-/* 13 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util = __webpack_require__(1);
-	var EventEmitter = __webpack_require__(3);
-	var Negotiator = __webpack_require__(6);
-	var Reliable = __webpack_require__(17);
+	var util = __webpack_require__(3);
+	var EventEmitter = __webpack_require__(8);
+	var Negotiator = __webpack_require__(18);
+	var Reliable = __webpack_require__(47);
 	
 	/**
 	 * Wraps a DataChannel between two Peers.
@@ -2338,12 +2475,12 @@
 
 
 /***/ },
-/* 14 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util = __webpack_require__(1);
-	var EventEmitter = __webpack_require__(3);
-	var Negotiator = __webpack_require__(6);
+	var util = __webpack_require__(3);
+	var EventEmitter = __webpack_require__(8);
+	var Negotiator = __webpack_require__(18);
 	
 	/**
 	 * Wraps the streaming interface between two Peers.
@@ -2439,14 +2576,14 @@
 
 
 /***/ },
-/* 15 */
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util = __webpack_require__(1);
-	var EventEmitter = __webpack_require__(3);
-	var Socket = __webpack_require__(16);
-	var MediaConnection = __webpack_require__(14);
-	var DataConnection = __webpack_require__(13);
+	var util = __webpack_require__(3);
+	var EventEmitter = __webpack_require__(8);
+	var Socket = __webpack_require__(46);
+	var MediaConnection = __webpack_require__(44);
+	var DataConnection = __webpack_require__(43);
 	
 	/**
 	 * A peer who can initiate connections with other peers.
@@ -2942,11 +3079,11 @@
 
 
 /***/ },
-/* 16 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util = __webpack_require__(1);
-	var EventEmitter = __webpack_require__(3);
+	var util = __webpack_require__(3);
+	var EventEmitter = __webpack_require__(8);
 	
 	/**
 	 * An abstraction on top of WebSockets and XHR streaming to provide fastest
@@ -3162,10 +3299,10 @@
 
 
 /***/ },
-/* 17 */
+/* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util = __webpack_require__(18);
+	var util = __webpack_require__(48);
 	
 	/**
 	 * Reliable transfer for Chrome Canary DataChannel impl.
@@ -3486,10 +3623,10 @@
 
 
 /***/ },
-/* 18 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var BinaryPack = __webpack_require__(7);
+	var BinaryPack = __webpack_require__(19);
 	
 	var util = {
 	  debug: false,
@@ -3588,4 +3725,4 @@
 
 /***/ }
 /******/ ]);
-//# sourceMappingURL=bundle.js.map
+//# sourceMappingURL=client.js.map

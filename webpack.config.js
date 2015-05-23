@@ -2,12 +2,12 @@ var webpack = require('webpack');
 
 module.exports = {
   entry: {
-    "service-client": [
+    "client": [
 //      'babel/polyfill',
-      './src/app.js'
+      './client/app.js'
     ],
-    "service-cdn": [
-      './service-worker/service-cdn.js'
+    "worker": [
+      './worker/worker.js'
     ]
   },
   output: {

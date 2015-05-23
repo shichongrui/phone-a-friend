@@ -9,7 +9,7 @@ function Worker () {
     console.log('Service Workers are' + ((serviceWorkersAvailable) ? ' ' : 'n\'t') + 'available')
     if ('serviceWorker' in navigator) {
       console.log('Registering service worker')
-      navigator.serviceWorker.register('/service-cdn.js').then(function (registration) {
+      navigator.serviceWorker.register('/worker.js').then(function (registration) {
         // Registration was successful
         console.log('ServiceWorker registration successful with scope: ', registration.scope)
 
