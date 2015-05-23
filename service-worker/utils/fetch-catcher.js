@@ -4,11 +4,7 @@ import minimatcher from './minimatcher'
 import {socket} from './socket-io'
 
 var patterns = [
-  'http://localhost:3002/**/*.jpg',
-  'http://localhost:3002/**/*.png',
-  'http://localhost:3002/**/*.gif',
-  'http://localhost:3002/**/*.js',
-  'http://localhost:3002/**/*.css'
+  'http://localhost:8080/**/*.jpeg'
 ]
 
 
@@ -21,7 +17,7 @@ function getResponse(request) {
 
   var matches = minimatcher(request.url, patterns)
 
-  if (!matches /*|| url.match('localhost:8081') !== null*/ ) {
+  if (!matches) {
     console.log('%s doesnt match any patterns', request.url)
     console.log('Not interfering with %s, move along', request.url)
     return getResponseThroughFetch(request, false)
@@ -49,6 +45,7 @@ function getResponseFromUser(request) {
       console.log('No one we know of has %s', request.url)
       console.log('Asking socket server for user with %s', request.url)
       socket.emit('file', request.url, function (data) {
+        console.log('DATA GOT BACK FROM THE SERVER', data)
         if (!data.peerId) {
           console.log('No one has %s', request.url)
           console.log('Get %s through normal channels', request.url)
