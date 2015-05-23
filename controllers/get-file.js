@@ -17,6 +17,7 @@ export default function getFile (socket, url, cb) {
   }).then((peerId) => {
     log.success('fileRequested: ' + peerId + ' ' + url)
     if (peerId) {
+      console.log(`peerId shouldn't be null ${peerId}`)
       cb({peerId})
     } else {
       cb({})
