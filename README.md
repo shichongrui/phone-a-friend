@@ -28,5 +28,4 @@ To get started with this project:
  6. Pull up Chrome Canary and Chrome Beta and navigate to `http://localhost:8080/demo.html`
  7. Open your console in each browser and refresh each one a few times and watch them load assets from one another
 
-###Contributing###
-Please do!
+Please contribute and help make this project even better!
