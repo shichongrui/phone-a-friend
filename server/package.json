@@ -1,0 +1,29 @@
+{
+  "name": "peer-assets-server",
+  "version": "1.0.0",
+  "description": "A socket io server to find other users that assets can be pulled from for the peer-asset loading framework",
+  "main": "server.js",
+  "scripts": {
+    "start": "node-dev server.js & redis-server & peerjs -p 9000"
+  },
+  "keywords": [
+    "WebRTC",
+    "socket.io",
+    "cdn"
+  ],
+  "author": "Matthew Sessions",
+  "license": "MIT",
+  "dependencies": {
+    "babel": "5.0.2",
+    "geoip-lite": "1.1.6",
+    "geolib": "2.0.14",
+    "node-uuid": "1.4.3",
+    "pretty-log": "0.1.0",
+    "request": "2.55.0",
+    "socket.io": "1.3.5",
+    "then-redis": "^1.3.0"
+  },
+  "devDependencies": {
+    "node-dev": "2.6.1"
+  }
+}
